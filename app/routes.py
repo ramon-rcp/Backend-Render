@@ -1,15 +1,17 @@
-from flask import Blueprint, jsonify, request
+from fastapi import APIRouter, Request
+from fastapi.responses import JSONResponse
 from .ticTacToe import TicTacToe
+from .main import app
 
-routes = Blueprint('routes', __name__)
+router = APIRouter()
 
-@routes.route('/api/health', methods=['GET'])
-def health_check():
-    return jsonify({'status': 'healthy'}), 200
+@router.get("/api/health")
+async def health_check():
+    return {"status": "healthy"}
 
-@routes.route('/api/example', methods=['GET'])
-def example_route():
-    return jsonify({'message': 'This is an example route'}), 200
+@router.get("/api/example")
+async def example_route():
+    return {"message": "This is an example route"}
 
 ###################################
 ## Routes for a tic-tac-toe game ##
@@ -17,34 +19,32 @@ def example_route():
 # In-memory game instance (resets on server restart)
 game = TicTacToe()
 
-# get the current game state
-# Returns the board, current player, winner, and number of moves made
-@routes.route('/api/tictactoe/state', methods=['GET'])
-def tictactoe_state():
-    return jsonify(game.get_state()), 200
+@router.get("/api/tictactoe/state")
+async def tictactoe_state():
+    return game.get_state()
 
-# Make a move on the board
-# Expects a JSON body with the position (0-8) to place the current player's
-# input format: {"position": 0}
-@routes.route('/api/tictactoe/move', methods=['POST'])
-def tictactoe_move():
-    data = request.get_json()
+@router.post("/api/tictactoe/move")
+async def tictactoe_move(request: Request):
+    data = await request.json()
     position = data.get("position")
     if position is None or not (0 <= position < 9):
-        return jsonify({"error": "Invalid position"}), 400
+        return JSONResponse({"error": "Invalid position"}, status_code=400)
     if game.make_move(position):
-        return jsonify(game.get_state()), 200
+        return game.get_state()
     else:
-        return jsonify({"error": "Invalid move"}), 400
+        return JSONResponse({"error": "Invalid move"}, status_code=400)
 
-# AI makes a move based on the current game state
-@routes.route('/api/tictactoe/ai-move', methods=['POST'])
-def tictactoe_ai_move():
+@router.post("/api/tictactoe/ai-move")
+async def tictactoe_ai_move():
     move = game.ai_move()
-    return jsonify({"move": move, **game.get_state()}), 200
+    return {"move": move, **game.get_state()}
 
-# Reset the game
-@routes.route('/api/tictactoe/reset', methods=['POST'])
-def tictactoe_reset():
+@router.post("/api/tictactoe/reset")
+async def tictactoe_reset():
     game.reset()
-    return jsonify(game.get_state()), 200
+    return game.get_state()
+
+###############################
+
+# Register the router with the FastAPI app
+app.include_router(router)
