@@ -1,13 +1,21 @@
-from flask import Flask
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 
-def create_app():
-    app = Flask(__name__)
+app = FastAPI()
 
-    with app.app_context():
-        from . import routes
+# Enable CORS for all origins (adjust as needed)
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
-    return app
+# Import your routes here (example)
+from . import routes  # You will need to adapt your routes.py for FastAPI
 
-if __name__ == "__main__":
-    app = create_app()
-    app.run(debug=True)
+# Example health check endpoint
+@app.get("/api/health")
+def health():
+    return {"status": "healthy"}
