@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Request
+from fastapi import APIRouter, Query
 from fastapi.responses import JSONResponse
 from .ticTacToe import TicTacToe
 from .main import app
