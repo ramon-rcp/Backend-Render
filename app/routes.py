@@ -24,7 +24,7 @@ async def tictactoe_state():
     return game.get_state()
 
 @router.get("/api/tictactoe/move")
-sync def tictactoe_move(position: int = Query(..., ge=0, le=8)):
+async def tictactoe_move(position: int = Query(..., ge=0, le=8)):
     if game.make_move(position):
         return game.get_state()
     else:
