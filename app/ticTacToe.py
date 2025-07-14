@@ -1,5 +1,14 @@
+import random
+
+# Probability of the AI making the best move related to difficulty level
+DIFFICULTIES = {
+            "easy": 0.2,
+            "medium": 0.5,
+            "hard": 0.8
+        }
+
 class TicTacToe:
-    def __init__(self, ai_player="X", opponent_player="O", starting_player="X"):
+    def __init__(self, ai_player="X", opponent_player="O", starting_player="X", difficulty="medium"):
         self.ai_player = ai_player
         self.opponent_player = opponent_player
         self.board = [""] * 9  # 3x3 board
@@ -11,6 +20,7 @@ class TicTacToe:
             [0,3,6], [1,4,7], [2,5,8],  # cols
             [0,4,8], [2,4,6]            # diags
         ]
+        self.difficulty = DIFFICULTIES.get(difficulty, 0.5)  # Default to medium if not specified
 
     def get_state(self):
         return {
@@ -98,7 +108,14 @@ class TicTacToe:
             return (best, best_move)
         
     def ai_move(self):
-        best_score, best_move = self.minimax(self.board, 9, True, self.ai_player, self.opponent_player)
+        best_move = random.randint(0, 8)  # Default to a random move
+        # The AI will play the best move based on the minimax algorithm based on the difficulty level
+        if random.random() < self.difficulty:
+            best_score, best_move = self.minimax(self.board, 9, True, self.ai_player, self.opponent_player)
+        elif self.board[best_move] != "":
+            # If the random move is already occupied, find a valid move
+            while self.board[best_move] != "":
+                best_move = random.randint(0, 8)
         if best_move != -1:
             self.make_move(best_move)
         return best_move
