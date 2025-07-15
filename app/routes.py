@@ -21,12 +21,12 @@ async def example_route():
 gameDict = {}
 
 @router.get("/api/tictactoe/start")
-async def tictactoe_start(ai_player: str = Query("X", regex="^[XO]$"), opponent_player: str = Query("O", regex="^[XO]$"), starting_player: str = Query("X", regex="^[XO]$")):
+async def tictactoe_start(ai_player: str = Query("X", regex="^[XO]$"), opponent_player: str = Query("O", regex="^[XO]$"), starting_player: str = Query("X", regex="^[XO]$"), difficulty: str = Query("medium", regex="^(easy|medium|hard|impossible)$")):
     key = random.randint(1000, 9999)
     # Ensure this key is unique
     while key in gameDict:
         key = random.randint(1000, 9999)
-    gameDict.update({key: TicTacToe(ai_player=ai_player, opponent_player=opponent_player, starting_player=starting_player)})
+    gameDict.update({key: TicTacToe(ai_player=ai_player, opponent_player=opponent_player, starting_player=starting_player, difficulty=difficulty)})
     if len(gameDict) > 100:
         # Limit the number of games stored in memory
         for key in list(gameDict.keys()):
