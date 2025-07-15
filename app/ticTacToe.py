@@ -2,9 +2,10 @@ import random
 
 # Probability of the AI making the best move related to difficulty level
 DIFFICULTIES = {
-            "easy": 0.2,
-            "medium": 0.5,
-            "hard": 0.8
+            "easy": 0.6,
+            "medium": 0.75,
+            "hard": 0.9,
+            "impossible": 1.0
         }
 
 class TicTacToe:
