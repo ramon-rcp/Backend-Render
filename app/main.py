@@ -12,8 +12,8 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Import your routes here (example)
-from . import routes  # You will need to adapt your routes.py for FastAPI
+# Import routes
+from . import routes  
 
 # Example health check endpoint
 @app.get("/api/health")
