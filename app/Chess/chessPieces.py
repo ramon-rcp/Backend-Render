@@ -9,7 +9,7 @@ class ChessPiece:
         self.has_moved = False
 
     @staticmethod
-    def ChessPiece(other: object):
+    def copy_ChessPiece(other: object):
         if not isinstance(other, ChessPiece):
             raise ValueError("Can only copy from another ChessPiece")
         new_piece = ChessPiece(other.color, other.position, other.name)
@@ -19,6 +19,9 @@ class ChessPiece:
 
     def set_pinned(self, pinned: list[tuple[int, int]]):
         self.pinned = pinned
+
+    def get_moves(self, board):
+        raise NotImplementedError("This method should be implemented by subclasses")
 
     def move(self, new_position: tuple[int, int]):
         self.position = new_position
@@ -38,6 +41,7 @@ class ChessPiece:
 class Pawn(ChessPiece):
     def __init__(self, color: bool, position: tuple[int, int]):
         super().__init__(color, position, "Pawn")
+        self.en_passant_target = False
 
     def get_moves(self, board: list[list[ChessPiece | None]]):
         moves = []
@@ -55,10 +59,24 @@ class Pawn(ChessPiece):
                 target = board[self.position[0] + direction][self.position[1] + dy]
                 if target is not None and target.color != self.color:
                     moves.append((self.position[0] + direction, self.position[1] + dy))
+        # En passant
+        for dy in [-1, 1]:
+            if 0 <= self.position[1] + dy < 8:
+                target = board[self.position[0]][self.position[1] + dy]
+                if target is not None and target.color != self.color and isinstance(target, Pawn) and target.en_passant_target:
+                    moves.append((self.position[0] + direction, self.position[1] + dy))
         for move in moves:
             if not self.is_move_along_pin(move):
                 moves.remove(move)
         return moves
+    
+    def move(self, new_position: tuple[int, int]):
+        super().move(new_position)
+        # Check for en passant
+        if abs(new_position[0] - self.position[0]) == 2:
+            self.en_passant_target = True
+        else:
+            self.en_passant_target = False
     
 class Rook(ChessPiece):
     def __init__(self, color: bool, position: tuple[int, int]):
@@ -207,13 +225,13 @@ class King(ChessPiece):
         if not self.has_moved:
             # Kingside
             if isinstance(board[self.position[0]][7], Rook):
-                rook = self.ChessPiece(board[self.position[0]][7])
+                rook = self.copy_ChessPiece(board[self.position[0]][7])
                 if not rook.has_moved:
                     if board[self.position[0]][5] is None and board[self.position[0]][6] is None:
                         moves.append((self.position[0], 6))
             # Queenside
             if isinstance(board[self.position[0]][0], Rook):
-                rook = self.ChessPiece(board[self.position[0]][0])
+                rook = self.copy_ChessPiece(board[self.position[0]][0])
                 if not rook.has_moved:
                     if board[self.position[0]][1] is None and board[self.position[0]][2] is None and board[self.position[0]][3] is None:
                         moves.append((self.position[0], 2))
