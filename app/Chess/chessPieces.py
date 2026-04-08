@@ -91,8 +91,6 @@ class Rook(ChessPiece):
         super().__init__(color, position, "Rook")
 
     def get_moves(self, board: list[list[ChessPiece | None]]):
-        if self.pinned:
-            return []
         moves = []
         # Horizontal and vertical moves
         for dx in [-1, 1]:
@@ -136,8 +134,6 @@ class Knight(ChessPiece):
         super().__init__(color, position, "Knight")
 
     def get_moves(self, board: list[list[ChessPiece | None]]):
-        if self.pinned:
-            return []
         moves = []
         # L-shaped moves
         for dx, dy in [(2, 1), (2, -1), (-2, 1), (-2, -1), (1, 2), (1, -2), (-1, 2), (-1, -2)]:
@@ -160,8 +156,6 @@ class Bishop(ChessPiece):
         super().__init__(color, position, "Bishop")
 
     def get_moves(self, board: list[list[ChessPiece | None]]):
-        if self.pinned:
-            return []
         moves = []
         # Diagonal moves
         for dx, dy in [(-1, -1), (-1, 1), (1, -1), (1, 1)]:
@@ -192,8 +186,6 @@ class Queen(ChessPiece):
         super().__init__(color, position, "Queen")
 
     def get_moves(self, board: list[list[ChessPiece | None]]):
-        if self.pinned:
-            return []
         moves = []
         # Combine Rook and Bishop moves
         for dx in [-1, 0, 1]:
@@ -225,10 +217,9 @@ class Queen(ChessPiece):
 class King(ChessPiece):
     def __init__(self, color: bool, position: tuple[int, int]):
         super().__init__(color, position, "King")
+        self.checks: list[tuple[int, int]] = []
 
     def get_moves(self, board: list[list[ChessPiece | None]]):
-        if self.pinned:
-            return []
         moves = []
         # One square in any direction
         for dx in [-1, 0, 1]:
@@ -237,25 +228,50 @@ class King(ChessPiece):
                     continue
                 new_x = self.position[0] + dx
                 new_y = self.position[1] + dy
-                if 0 <= new_x < 8 and 0 <= new_y < 8:
+                if 0 <= new_x < 8 and 0 <= new_y < 8 and (new_x, new_y) not in self.checks:
                     target = board[new_x][new_y]
                     if target is None or target.color != self.color:
                         moves.append((new_x, new_y))
         # Castling
-        if not self.has_moved:
-            # Kingside
-            if isinstance(board[self.position[0]][7], Rook):
-                rook = self.copy_ChessPiece(board[self.position[0]][7])
-                if not rook.has_moved:
-                    if board[self.position[0]][5] is None and board[self.position[0]][6] is None:
-                        moves.append((self.position[0], 6))
-            # Queenside
-            if isinstance(board[self.position[0]][0], Rook):
-                rook = self.copy_ChessPiece(board[self.position[0]][0])
-                if not rook.has_moved:
-                    if board[self.position[0]][1] is None and board[self.position[0]][2] is None and board[self.position[0]][3] is None:
-                        moves.append((self.position[0], 2))
+        if self.can_castle_kingside(board):
+            moves.append((self.position[0], 6))
+        if self.can_castle_queenside(board):
+            moves.append((self.position[0], 2))
         return moves
-    
+
     def get_move_directions(self):
         return None
+    
+    def add_check(self, position: tuple[int, int]):
+        if position not in self.checks:
+            self.checks.append(position)
+
+    def is_checked(self):
+        return self.position in self.checks
+    
+    def clear_checks(self):
+        self.checks = []
+
+    def can_castle_kingside(self, board):
+        if self.has_moved or self.is_checked():
+            return False
+        rook = board[self.position[0]][7]
+        if not isinstance(rook, Rook) or rook.has_moved:
+            return False
+        if board[self.position[0]][5] is not None or board[self.position[0]][6] is not None:
+            return False
+        if (self.position[0], 5) in self.checks or (self.position[0], 6) in self.checks:
+            return False
+        return True
+    
+    def can_castle_queenside(self, board):
+        if self.has_moved or self.is_checked():
+            return False
+        rook = board[self.position[0]][0]
+        if not isinstance(rook, Rook) or rook.has_moved:
+            return False
+        if board[self.position[0]][1] is not None or board[self.position[0]][2] is not None or board[self.position[0]][3] is not None:
+            return False
+        if (self.position[0], 1) in self.checks or (self.position[0], 2) in self.checks or (self.position[0], 3) in self.checks:
+            return False
+        return True
