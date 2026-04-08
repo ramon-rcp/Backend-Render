@@ -15,7 +15,7 @@ class TestChessPiece:
 
     def test_set_pinned(self):
         piece = ChessPiece(True, (4, 4), "Test")
-        piece.set_pinned([(1, 0)])
+        piece.set_pinned((1, 0))
         assert piece.pinned == [(1, 0)]
         print("Pinned state set correctly")
 
@@ -33,7 +33,7 @@ class TestChessPiece:
 
     def test_is_move_along_pin_horizontal(self):
         piece = ChessPiece(True, (4, 4), "Test")
-        piece.set_pinned([(1, 0)])
+        piece.set_pinned((1, 0))
         assert piece.is_move_along_pin((4, 5)) is False
         assert piece.is_move_along_pin((7, 4)) is True
         assert piece.is_move_along_pin((3, 4)) is True
@@ -41,7 +41,7 @@ class TestChessPiece:
 
     def test_is_move_along_pin_diagonal(self):
         piece = ChessPiece(True, (4, 4), "Test")
-        piece.set_pinned([(1, 1)])
+        piece.set_pinned((1, 1))
         assert piece.is_move_along_pin((5, 5)) is True
         assert piece.is_move_along_pin((2, 2)) is True
         assert piece.is_move_along_pin((5, 4)) is False
@@ -109,7 +109,7 @@ class TestPawn:
     def test_pawn_pinned_horizontal(self):
         board: list[list[ChessPiece | None]] = [[None] * 8 for _ in range(8)]
         pawn = Pawn(True, (4, 4))
-        pawn.set_pinned([(1, 0)])
+        pawn.set_pinned((1, 0))
         moves = pawn.get_moves(board)
         # Pawn moves vertically, but pinned horizontally, so no moves
         assert len(moves) == 0
@@ -157,7 +157,7 @@ class TestRook:
     def test_rook_pinned(self):
         board: list[list[ChessPiece | None]] = [[None] * 8 for _ in range(8)]
         rook = Rook(True, (4, 4))
-        rook.set_pinned([(1, 0)])
+        rook.set_pinned((1, 0))
         moves = rook.get_moves(board)
         # Should only be able to move horizontally
         assert (4, 5) in moves
@@ -187,7 +187,7 @@ class TestKnight:
     def test_knight_pinned(self):
         board: list[list[ChessPiece | None]] = [[None] * 8 for _ in range(8)]
         knight = Knight(True, (4, 4))
-        knight.set_pinned([(1, 0)])
+        knight.set_pinned((1, 0))
         moves = knight.get_moves(board)
         # Knights can't move while pinned (no L-shaped moves along pin)
         assert len(moves) == 0
@@ -227,7 +227,7 @@ class TestBishop:
     def test_bishop_pinned_diagonal(self):
         board: list[list[ChessPiece | None]] = [[None] * 8 for _ in range(8)]
         bishop = Bishop(True, (4, 4))
-        bishop.set_pinned([(1, 1)])
+        bishop.set_pinned((1, 1))
         moves = bishop.get_moves(board)
         # Should only move along diagonal
         assert (5, 5) in moves

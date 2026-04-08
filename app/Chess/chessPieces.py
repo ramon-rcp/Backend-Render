@@ -5,7 +5,7 @@ class ChessPiece:
         self.color = color
         self.position = position
         self.name = name
-        self.pinned = [(0, 0)]
+        self.pinned: tuple[int, int] = (0, 0)
         self.has_moved = False
 
     @staticmethod
@@ -17,10 +17,13 @@ class ChessPiece:
         new_piece.has_moved = other.has_moved
         return new_piece
 
-    def set_pinned(self, pinned: list[tuple[int, int]]):
+    def set_pinned(self, pinned: tuple[int, int]):
         self.pinned = pinned
 
     def get_moves(self, board):
+        raise NotImplementedError("This method should be implemented by subclasses")
+    
+    def get_move_directions(self):
         raise NotImplementedError("This method should be implemented by subclasses")
 
     def move(self, new_position: tuple[int, int]):
@@ -28,13 +31,12 @@ class ChessPiece:
         self.has_moved = True
 
     def is_move_along_pin(self, new_pos: tuple[int, int]):
-        for pin in self.pinned:
-            if self.pinned == (0,0):
-                continue
-            move_dir = (new_pos[0] - self.position[0], new_pos[1] - self.position[1])
-            move_dir = (move_dir[0] // max(1, abs(move_dir[0])), move_dir[1] // max(1, abs(move_dir[1])))
-            if not((move_dir == self.pinned) or (move_dir == (-pin[0], -pin[1]))):
-                return False
+        if self.pinned == (0,0):
+            return False
+        move_dir = (new_pos[0] - self.position[0], new_pos[1] - self.position[1])
+        move_dir = (move_dir[0] // max(1, abs(move_dir[0])), move_dir[1] // max(1, abs(move_dir[1])))
+        if not((move_dir == self.pinned) or (move_dir == (-self.pinned[0], -self.pinned[1]))):
+            return False
         return True
  
 
@@ -77,6 +79,9 @@ class Pawn(ChessPiece):
             self.en_passant_target = True
         else:
             self.en_passant_target = False
+
+    def get_move_directions(self):
+        return None
     
 class Rook(ChessPiece):
     def __init__(self, color: bool, position: tuple[int, int]):
@@ -120,6 +125,9 @@ class Rook(ChessPiece):
                 moves.remove(move)
         return moves
     
+    def get_move_directions(self):
+        return [(1, 0), (-1, 0), (0, 1), (0, -1)]
+    
 class Knight(ChessPiece):
     def __init__(self, color: bool, position: tuple[int, int]):
         super().__init__(color, position, "Knight")
@@ -140,6 +148,9 @@ class Knight(ChessPiece):
             if not self.is_move_along_pin(move):
                 moves.remove(move)
         return moves
+    
+    def get_move_directions(self):
+        return None
     
 class Bishop(ChessPiece):
     def __init__(self, color: bool, position: tuple[int, int]):
@@ -169,6 +180,9 @@ class Bishop(ChessPiece):
             if not self.is_move_along_pin(move):
                 moves.remove(move)
         return moves
+    
+    def get_move_directions(self):
+        return [(-1, -1), (-1, 1), (1, -1), (1, 1)]
     
 class Queen(ChessPiece):
     def __init__(self, color: bool, position: tuple[int, int]):
@@ -201,6 +215,9 @@ class Queen(ChessPiece):
             if not self.is_move_along_pin(move):
                 moves.remove(move)
         return moves
+    
+    def get_move_directions(self):
+        return [(-1, -1), (-1, 0), (-1, 1), (0, -1), (0, 1), (1, -1), (1, 0), (1, 1)]
     
 class King(ChessPiece):
     def __init__(self, color: bool, position: tuple[int, int]):
@@ -236,3 +253,6 @@ class King(ChessPiece):
                     if board[self.position[0]][1] is None and board[self.position[0]][2] is None and board[self.position[0]][3] is None:
                         moves.append((self.position[0], 2))
         return moves
+    
+    def get_move_directions(self):
+        return None
