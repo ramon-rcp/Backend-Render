@@ -20,6 +20,9 @@ class ChessPiece:
     def set_pinned(self, pinned: tuple[int, int]):
         self.pinned = pinned
 
+    def clear_pin(self):
+        self.pinned = (0, 0)
+
     def get_moves(self, board):
         raise NotImplementedError("This method should be implemented by subclasses")
     

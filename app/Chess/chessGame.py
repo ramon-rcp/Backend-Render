@@ -45,6 +45,7 @@ class Game:
         for row in self.board:
             for piece in row:
                 if piece is not None:
+                    piece.clear_pin()
                     if piece.color != self.white_turn:
                         moves = piece.get_moves(self.board)
                         opponent_moves[piece.position] = moves
