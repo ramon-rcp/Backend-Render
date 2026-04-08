@@ -7,7 +7,8 @@ class Game:
         self.white_turn = True
         self.checkmate = False
         self.stalemate = False
-        self.check = False
+        self.opponent_moves = {}
+        self.player_moves = {}
         self.update_opponent_moves()
 
     @staticmethod
@@ -38,7 +39,7 @@ class Game:
         return board, white_king, black_king
     
     def update_opponent_moves(self):
-        opponent_moves = {}
+        self.opponent_moves = {}
         king = self.white_king if self.white_turn else self.black_king
         if king is None:
             return
@@ -48,9 +49,9 @@ class Game:
                     piece.clear_pin()
                     if piece.color != self.white_turn:
                         moves = piece.get_moves(self.board)
-                        opponent_moves[piece.position] = moves
-                        self.check = self.check or (king.position in moves)
+                        self.opponent_moves[piece.position] = moves
                         self.check_pins(piece, king)
+                        self.add_checks(king, moves)
 
     def check_pins(self, piece: ChessPiece, king: King):
         piece_directions = piece.get_move_directions()
@@ -71,6 +72,38 @@ class Game:
                         break
             if pinned_piece is not None:
                 pinned_piece.set_pinned(dir_2_king_normalized)
+
+    def add_checks(self, king: King, moves: list[tuple[int, int]]):
+        king.clear_checks()
+        if king.position in moves:
+            king.add_check(king.position)
+        for dx in [-1, 0, 1]:
+            for dy in [-1, 0, 1]:
+                if dx == 0 and dy == 0:
+                    continue
+                newX = king.position[0] + dx
+                newY = king.position[1] + dy
+                if (newX, newY) in moves:
+                    king.add_check((newX, newY))
+        # Castling checks
+        if not king.has_moved:
+            for dx in [-3, -2, 2]:
+                newX = king.position[0] + dx
+                newY = king.position[1]
+                if (newX, newY) in moves:
+                    king.add_check((newX, newY))
+
+    def update_player_moves(self):
+        self.player_moves = {}
+        for row in self.board:
+            for piece in row:
+                if piece is not None:
+                    piece.clear_pin()
+                    if piece.color == self.white_turn:
+                        moves = piece.get_moves(self.board)
+                        self.player_moves[piece.position] = moves
+                        
+        
                     
 
         
