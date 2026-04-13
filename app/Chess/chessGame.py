@@ -102,6 +102,45 @@ class Game:
                     if piece.color == self.white_turn:
                         moves = piece.get_moves(self.board)
                         self.player_moves[piece.position] = moves
+
+    def make_move(self, from_pos: tuple[int, int], to_pos: tuple[int, int]):
+        piece = self.board[from_pos[0]][from_pos[1]]
+        if piece is None or piece.color != self.white_turn:
+            return False
+        moves = piece.get_moves(self.board)
+        if to_pos not in moves:
+            return False
+        
+        # Check for castling
+        castling = isinstance(piece, King) and abs(to_pos[1] - from_pos[1]) == 2
+
+        # Move the piece
+        rook = self.board[to_pos[0]][to_pos[1]] if castling else None
+        if not isinstance(rook, Rook) and castling:
+            return False
+        self.board[to_pos[0]][to_pos[1]] = piece
+        self.board[from_pos[0]][from_pos[1]] = rook
+        if isinstance(rook, Rook) and castling:
+            rook.position = (from_pos[0], from_pos[1])
+            rook.has_moved = True
+        piece.position = to_pos
+        piece.has_moved = True
+
+        # change turn 
+        self.white_turn = not self.white_turn
+
+        # Update moves for next turn and check for checkmate/stalemate
+        self.update_opponent_moves()
+        self.update_player_moves()
+        king = self.white_king if self.white_turn else self.black_king
+        if king is None:
+            return False
+        if self.player_moves[king.position] == []:
+            if king.checks:
+                self.checkmate = True
+            else:
+                self.stalemate = True
+        return True
                         
         
                     
