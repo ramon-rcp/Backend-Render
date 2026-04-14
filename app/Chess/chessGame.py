@@ -35,7 +35,7 @@ class Game:
                         black_king = piece
         for j in [1, 6]:
             for i in range(8):
-                board[j][i] = Pawn(j == 0, (j, i))
+                board[j][i] = Pawn(j == 1, (j, i))
         return board, white_king, black_king
     
     def update_opponent_moves(self):
@@ -43,6 +43,7 @@ class Game:
         king = self.white_king if self.white_turn else self.black_king
         if king is None:
             return
+        king.clear_checks()
         for row in self.board:
             for piece in row:
                 if piece is not None:
@@ -53,11 +54,12 @@ class Game:
                         self.check_pins(piece, king)
                         self.add_checks(king, moves)
 
+    # CHeck if opponent piece is pinning player"S pieces
     def check_pins(self, piece: ChessPiece, king: King):
         piece_directions = piece.get_move_directions()
         dir_2_king = (king.position[0] - piece.position[0], king.position[1] - piece.position[1])
         dir_2_king_normalized = (dir_2_king[0] // max(1, abs(dir_2_king[0])), dir_2_king[1] // max(1, abs(dir_2_king[1])))
-        if dir_2_king_normalized in piece_directions:
+        if piece_directions is not None and dir_2_king_normalized in piece_directions:
             pinned_piece = None
             for i in range(1, 8):
                 pos = (piece.position[0] + dir_2_king_normalized[0] * i, piece.position[1] + dir_2_king_normalized[1] * i)
@@ -65,7 +67,7 @@ class Game:
                     break
                 square = self.board[pos[0]][pos[1]]
                 if square is not None:
-                    if pinned_piece is None and square.color == piece.color:
+                    if pinned_piece is None and square.color != piece.color:
                         pinned_piece = square
                     else:
                         pinned_piece = None
@@ -74,7 +76,6 @@ class Game:
                 pinned_piece.set_pinned(dir_2_king_normalized)
 
     def add_checks(self, king: King, moves: list[tuple[int, int]]):
-        king.clear_checks()
         if king.position in moves:
             king.add_check(king.position)
         for dx in [-1, 0, 1]:
@@ -115,17 +116,20 @@ class Game:
         castling = isinstance(piece, King) and abs(to_pos[1] - from_pos[1]) == 2
 
         # Move the piece
-        rook = self.board[to_pos[0]][to_pos[1]] if castling else None
-        if not isinstance(rook, Rook) and castling:
-            return False
-        self.board[to_pos[0]][to_pos[1]] = piece
-        self.board[from_pos[0]][from_pos[1]] = rook
-        if isinstance(rook, Rook) and castling:
-            rook.position = (from_pos[0], from_pos[1])
-            rook.has_moved = True
-        piece.position = to_pos
-        piece.has_moved = True
-
+        if castling:
+            rook = self.board[to_pos[0]][to_pos[1]]
+            if not isinstance(rook, Rook) or rook.has_moved:
+                return False
+            self.board[to_pos[0]][to_pos[1]] = piece
+            self.board[from_pos[0]][from_pos[1]] = None
+            rook_to_pos = (from_pos[0], from_pos[1] + (1 if to_pos[1] > from_pos[1] else -1))
+            self.board[rook_to_pos[0]][rook_to_pos[1]] = rook
+            rook.move(rook_to_pos)
+        else:
+            self.board[to_pos[0]][to_pos[1]] = piece
+            self.board[from_pos[0]][from_pos[1]] = None
+        piece.move(to_pos)
+        
         # change turn 
         self.white_turn = not self.white_turn
 
