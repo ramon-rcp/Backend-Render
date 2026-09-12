@@ -20,7 +20,7 @@ async def example_route():
 # In-memory game instance (resets on server restart)
 gameDict = {}
 
-@router.get("/api/tictactoe/start")
+@router.post("/api/tictactoe/start")
 async def tictactoe_start(ai_player: str = Query("X", regex="^[XO]$"), opponent_player: str = Query("O", regex="^[XO]$"), starting_player: str = Query("X", regex="^[XO]$"), difficulty: str = Query("medium", regex="^(easy|medium|hard|impossible)$")):
     key = random.randint(1000, 9999)
     # Ensure this key is unique
@@ -43,7 +43,7 @@ async def tictactoe_state(key: int = Query(..., ge=1000, le=9999)):
     game = gameDict[key]
     return game.get_state()
 
-@router.get("/api/tictactoe/move")
+@router.patch("/api/tictactoe/move")
 async def tictactoe_move(key: int = Query(..., ge=1000, le=9999), position: int = Query(..., ge=0, le=8)):
     if key not in gameDict:
         return JSONResponse({"error": "Game not found"}, status_code=404)
@@ -53,7 +53,7 @@ async def tictactoe_move(key: int = Query(..., ge=1000, le=9999), position: int 
     else:
         return JSONResponse({"error": "Invalid move"}, status_code=400)
 
-@router.get("/api/tictactoe/ai-move")
+@router.patch("/api/tictactoe/ai-move")
 async def tictactoe_ai_move(key: int = Query(..., ge=1000, le=9999)):
     if key not in gameDict:
         return JSONResponse({"error": "Game not found"}, status_code=404)
@@ -61,7 +61,7 @@ async def tictactoe_ai_move(key: int = Query(..., ge=1000, le=9999)):
     move = game.ai_move()
     return {"move": move, **game.get_state()}
 
-@router.get("/api/tictactoe/reset")
+@router.patch("/api/tictactoe/reset")
 async def tictactoe_reset(key: int = Query(..., ge=1000, le=9999)):
     if key not in gameDict:
         return JSONResponse({"error": "Game not found"}, status_code=404)
