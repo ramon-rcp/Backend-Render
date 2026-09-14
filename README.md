@@ -1,7 +1,7 @@
 # Python Backend Project
 
 ## Overview
-This project is a simple Python backend application built using Flask. It serves as a starting point for developing web applications with Python.
+This project is a simple Python backend application built using FastAPI. It serves as a starting point for developing web applications with Python.
 
 ## Project Structure
 ```
